@@ -48,6 +48,8 @@ namespace goOfflineE
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddAutoMapper(typeof(Startup));
+            services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddTransient<IAccountService, AccountService>();
             services.AddTransient<ISchoolService, SchoolService>();
             services.AddTransient<IProfileService, ProfileService>();
@@ -65,7 +67,6 @@ namespace goOfflineE
             services.AddTransient<ISettingService, SettingService>();
             services.AddTransient<ITenantService, TenantService>();
 
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<ITableStorage, AzureTableStorage>();
             services.AddSingleton<IFaceClient, FaceClient>(s => new FaceClient(new ApiKeyServiceClientCredentials(SettingConfigurations.CognitiveServiceKey),
             new System.Net.Http.DelegatingHandler[] { }));

@@ -45,7 +45,7 @@ namespace goOfflineE.Functions
                 return new BadRequestObjectResult(validateStatus);
             }
 
-            var response = await _blobService.GetSasUri(container);
+            var response = await _blobService.GetSassUri(container);
 
             return new OkObjectResult(response);
         }

@@ -13,6 +13,6 @@
         /// </summary>
         /// <param name="containerName">The containerName<see cref="string"/>.</param>
         /// <returns>The <see cref="Task{BlobStorageRequest}"/>.</returns>
-        Task<BlobStorageRequest> GetSasUri(string containerName);
+        Task<BlobStorageRequest> GetSassUri(string containerName);
     }
 }

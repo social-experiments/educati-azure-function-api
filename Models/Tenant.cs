@@ -46,6 +46,11 @@
         public string AzureBlobURL { get; set; }
 
         /// <summary>
+        /// Gets or sets the OfflineWebsiteURL.
+        /// </summary>
+        public string OfflineWebsiteURL { get; set; }
+
+        /// <summary>
         /// Gets or sets the ApplicationSettings.
         /// </summary>
         public string ApplicationSettings { get; set; }

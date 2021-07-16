@@ -125,26 +125,6 @@
                 throw new HttpResponseException(resp);
             }
 
-            // authentication successful so generate jwt
-            var jwtToken = GenerateToken(account.RowKey, account.TenantId);
-            if(!String.IsNullOrEmpty(account.TenantId))
-            {
-                var dataTentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
-                var tenant = dataTentants.FirstOrDefault(t => t.RowKey == account.TenantId);
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(tenant.AzureWebJobsStorage);
-                _tableStorage.Client = storageAccount.CreateCloudTableClient();
-            }
-
-            string schoolId = "";
-
-            if (account.Role == Role.Teacher.ToString())
-            {
-                TableQuery<Entites.Teacher> query = new TableQuery<Entites.Teacher>()
-                  .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, account.RowKey));
-                var teacherQuery = await _tableStorage.QueryAsync<Entites.Teacher>("Teacher", query);
-                var teacher = teacherQuery.SingleOrDefault();
-                schoolId = teacher.PartitionKey;
-            }
             var response = new AuthenticateResponse
             {
                 Id = account.RowKey,
@@ -153,11 +133,28 @@
                 LastName = account.LastName,
                 Role = account.Role,
                 ForceChangePasswordNextLogin = account.ForceChangePasswordNextLogin,
-                TenantId = account.TenantId,
-                SchoolId = schoolId,
-                Token = jwtToken
+                TenantId = account.TenantId
             };
 
+            // authentication successful so generate jwt
+            response.Token = GenerateToken(account.RowKey, account.TenantId);
+            if(!String.IsNullOrEmpty(account.TenantId))
+            {
+                var dataTentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
+                var tenant = dataTentants.FirstOrDefault(t => t.RowKey == account.TenantId);
+                response.Tenant = _mapper.Map<Models.Tenant>(tenant); ;
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(tenant.AzureWebJobsStorage);
+                _tableStorage.Client = storageAccount.CreateCloudTableClient();
+            }
+
+            if (account.Role == Role.Teacher.ToString())
+            {
+                TableQuery<Entites.Teacher> query = new TableQuery<Entites.Teacher>()
+                  .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, account.RowKey));
+                var teacherQuery = await _tableStorage.QueryAsync<Entites.Teacher>("Teacher", query);
+                var teacher = teacherQuery.SingleOrDefault();
+                response.SchoolId = teacher.PartitionKey;
+            }
             return response;
         }
 

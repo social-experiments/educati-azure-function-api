@@ -103,7 +103,7 @@
         public async Task CreateUpdate(Tenant tenant)
         {
             var tentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
-            var tenantData = tentants.FirstOrDefault(t => t.AccountKey == tenant.AccountKey);
+            var tenantData = tentants.FirstOrDefault(t => t.RowKey == tenant.Id);
 
             if (tenantData is null)
             {
@@ -134,6 +134,15 @@
             {
                 try
                 {
+                    tenantData.AccountKey = tenant.AccountKey;
+                    tenantData.AzureWebJobsStorage = tenant.AzureWebJobsStorage;
+                    tenantData.AzureBlobURL = tenant.AzureBlobURL;
+                    tenantData.Name = tenant.Name;
+                    tenantData.Email = tenant.Email;
+                    tenantData.ApplicationSettings = tenant.ApplicationSettings;
+                    tenantData.CognitiveServiceEndPoint = tenant.CognitiveServiceEndPoint;
+                    tenantData.CognitiveServiceKey = tenant.CognitiveServiceKey;
+
                     await _tableStorage.UpdateAsync("Tenants", tenantData);
                 }
                 catch (Exception ex)

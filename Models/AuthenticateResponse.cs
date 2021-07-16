@@ -10,6 +10,7 @@ namespace goOfflineE.Models
         /// </summary>
         public AuthenticateResponse()
         {
+            Tenant = new Tenant();
         }
 
         /// <summary>
@@ -61,5 +62,7 @@ namespace goOfflineE.Models
         /// Gets or sets a value indicating whether ForceChangePasswordNextLogin.
         /// </summary>
         public bool ForceChangePasswordNextLogin { get; set; }
+
+        public Tenant Tenant { get; set; }
     }
 }

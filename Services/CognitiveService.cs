@@ -87,7 +87,7 @@
                     queueDataMessage.StudentId
                 ).ConfigureAwait(false);
 
-                BlobStorageRequest blobStorage = await _azureBlobService.GetSasUri("students");
+                BlobStorageRequest blobStorage = await _azureBlobService.GetSassUri("students");
 
                 _log.LogInformation($"BlobStorageRequest {blobStorage.StorageUri}");
 
@@ -165,7 +165,7 @@
             // Call the Face API.
             try
             {
-                BlobStorageRequest blobStorage = await _azureBlobService.GetSasUri("attendance");
+                BlobStorageRequest blobStorage = await _azureBlobService.GetSassUri("attendance");
                 _log.LogInformation($"APIErrorException BlobStorageRequest: {blobStorage.StorageUri}");
 
                 var blobUriBuilder = new System.UriBuilder($"{blobStorage.StorageUri}attendance/{queueDataMessage.PictureURLs[0]}")
