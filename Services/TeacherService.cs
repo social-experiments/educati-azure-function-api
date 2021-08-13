@@ -5,6 +5,7 @@
     using goOfflineE.Helpers;
     using goOfflineE.Models;
     using goOfflineE.Repository;
+    using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using System;
     using System.Collections.Generic;
@@ -138,8 +139,15 @@
                 };
                 try
                 {
-                    await _profileService.Register(registerRequest);
+
                     await _tableStorage.AddAsync("Teacher", newTeacher);
+
+                    if (!String.IsNullOrEmpty(model.TenantId))
+                    {
+                        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(SettingConfigurations.AzureWebJobsStorage);
+                        _tableStorage.Client = storageAccount.CreateCloudTableClient();
+                        await _profileService.Register(registerRequest);
+                    }
                     await NewTeacherNotificationEmail(registerRequest);
                 }
                 catch (Exception ex)

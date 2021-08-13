@@ -185,43 +185,12 @@
 
             if (requestData.Role == Role.Student.ToString())
             {
-                var students = await _tableStorage.GetAllAsync<Entites.Student>("Student");
-                var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == requestData.EnrolmentNo.ToLower());
-
-                if (student == null)
-                {
-                    var resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
-                    {
-                        Content = new StringContent(string.Format("Invalid Enrolment Number!"))
-                    };
-                    throw new HttpResponseException(resp);
-                }
-
-                var studentRes = new StudentResponse
-                {
-                    Id = student.RowKey,
-                    FirstName = student.FirstName,
-                    LastName = student.LastName,
-                    EnrolmentNo = student.EnrolmentNo,
-                    Address1 = student.Address1,
-                    Address2 = student.Address2,
-                    Country = student.Country,
-                    State = student.State,
-                    City = student.City,
-                    Zip = student.Zip,
-                    SchoolId = student.PartitionKey,
-                    ClassId = student.ClassId,
-                    ProfileStoragePath = student.ProfileStoragePath,
-                    TrainStudentModel = student.TrainStudentModel,
-                    Gender = student.Gender
-                };
 
                 var associateMenu = await _settingService.GetMenus("Student");
-                var courseContent = await _contentService.GetAll(student.PartitionKey, student.ClassId);
-                var school = await _schoolService.Get(student.PartitionKey);
-                var classRoom = await _classService.Get(student.ClassId);
+                var courseContent = await _contentService.GetAll(requestData.SchoolId, requestData.ClassId);
+                var school = await _schoolService.Get(requestData.SchoolId);
+                var classRoom = await _classService.Get(requestData.ClassId);
 
-                classRoom.Students.Add(studentRes);
                 school.ClassRooms.Add(classRoom);
 
                 result.Schools.Add(school);

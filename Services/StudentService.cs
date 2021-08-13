@@ -1,9 +1,12 @@
 ﻿namespace goOfflineE.Services
 {
     using AutoMapper;
+    using goOfflineE.Common.Constants;
+    using goOfflineE.Common.Enums;
     using goOfflineE.Helpers;
     using goOfflineE.Models;
     using goOfflineE.Repository;
+    using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using Newtonsoft.Json;
     using System;
@@ -100,6 +103,8 @@
 
                 var newStudent = new Entites.Student(model.SchoolId, studentId)
                 {
+
+                    TenantId = model.TenantId,
                     EnrolmentNo = model.EnrolmentNo,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
@@ -121,6 +126,27 @@
                 try
                 {
                     await _tableStorage.AddAsync("Student", newStudent);
+
+                    if (!String.IsNullOrEmpty(model.TenantId))
+                    {
+                        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(SettingConfigurations.AzureWebJobsStorage);
+                        _tableStorage.Client = storageAccount.CreateCloudTableClient();
+
+                        var userId = Guid.NewGuid().ToString();
+                        var newUser = new Entites.User(model.SchoolId, userId)
+                        {
+                            EnrolmentNo = model.EnrolmentNo,
+                            TenantId = model.TenantId,
+                            Role = Role.Student.ToString(),
+                            Active = true,
+                            Verified = DateTime.UtcNow,
+                            CreatedBy = userId,
+                            UpdatedOn = DateTime.UtcNow,
+                            UpdatedBy = userId
+                        };
+
+                        await _tableStorage.AddAsync("User", newUser);
+                    }
                 }
                 catch (Exception ex)
                 {

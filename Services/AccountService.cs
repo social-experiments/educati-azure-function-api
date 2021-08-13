@@ -38,11 +38,6 @@
         private readonly ISchoolService _schoolService;
 
         /// <summary>
-        /// Defines the _studentService.
-        /// </summary>
-        private readonly IStudentService _studentService;
-
-        /// <summary>
         /// Defines the _classService.
         /// </summary>
         private readonly IClassService _classService;
@@ -97,7 +92,6 @@
             _tableStorage = tableStorage;
             _schoolService = schoolService;
             _mapper = mapper;
-            _studentService = studentService;
             _classService = classService;
             _contentService = contentService;
             _assessmentService = assessmentService;
@@ -326,11 +320,11 @@
         /// <returns>The <see cref="Task{AuthenticateResponse}"/>.</returns>
         public async Task<AuthenticateResponse> Authenticate(StudentAuthenticateRequest model)
         {
-            // validate
-            var students = await _tableStorage.GetAllAsync<Student>("Student");
-            var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
+             // validate
+            var users = await _tableStorage.GetAllAsync<User>("User");
+            var user = users.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
 
-            if (student == null)
+            if (user == null)
             {
                 var resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
                 {
@@ -340,7 +334,19 @@
             }
 
             // authentication successful so generate jwt
-            var jwtToken = GenerateToken(student.RowKey, student.TenantId);
+            var jwtToken = GenerateToken(user.RowKey, user.TenantId);
+
+            if (!String.IsNullOrEmpty(user.TenantId))
+            {
+                var dataTentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
+                var tenant = dataTentants.FirstOrDefault(t => t.RowKey == user.TenantId);
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(tenant.AzureWebJobsStorage);
+                _tableStorage.Client = storageAccount.CreateCloudTableClient();
+            }
+
+            var students = await _tableStorage.GetAllAsync<Student>("Student");
+            var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
+
 
             var studentRes = new StudentResponse
             {
