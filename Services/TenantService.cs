@@ -185,13 +185,14 @@
 
             if (requestData.Role == Role.Student.ToString())
             {
-
                 var associateMenu = await _settingService.GetMenus("Student");
                 var courseContent = await _contentService.GetAll(requestData.SchoolId, requestData.ClassId);
                 var school = await _schoolService.Get(requestData.SchoolId);
-                var classRoom = await _classService.Get(requestData.ClassId);
-
-                school.ClassRooms.Add(classRoom);
+                if(!String.IsNullOrEmpty( requestData?.ClassId))
+                {
+                    var classRoom = await _classService.Get(requestData.ClassId);
+                    school.ClassRooms.Add(classRoom);
+                }
 
                 result.Schools.Add(school);
                 result.CourseContent = courseContent.ToList();

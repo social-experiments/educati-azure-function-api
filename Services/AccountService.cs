@@ -348,32 +348,32 @@
             var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
 
 
-            var studentRes = new StudentResponse
-            {
-                Id = student.RowKey,
-                FirstName = student.FirstName,
-                LastName = student.LastName,
-                EnrolmentNo = student.EnrolmentNo,
-                Address1 = student.Address1,
-                Address2 = student.Address2,
-                Country = student.Country,
-                State = student.State,
-                City = student.City,
-                Zip = student.Zip,
-                SchoolId = student.PartitionKey,
-                ClassId = student.ClassId,
-                ProfileStoragePath = student.ProfileStoragePath,
-                TrainStudentModel = student.TrainStudentModel,
-                Gender = student.Gender
-            };
+            //var studentRes = new StudentResponse
+            //{
+            //    Id = student.RowKey,
+            //    FirstName = student.FirstName,
+            //    LastName = student.LastName,
+            //    EnrolmentNo = student.EnrolmentNo,
+            //    Address1 = student.Address1,
+            //    Address2 = student.Address2,
+            //    Country = student.Country,
+            //    State = student.State,
+            //    City = student.City,
+            //    Zip = student.Zip,
+            //    SchoolId = student.PartitionKey,
+            //    ClassId = student.ClassId,
+            //    ProfileStoragePath = student.ProfileStoragePath,
+            //    TrainStudentModel = student.TrainStudentModel,
+            //    Gender = student.Gender
+            //};
 
-            var associateMenu = await _settingService.GetMenus("Student");
-            var courseContent = await _contentService.GetAll(student.PartitionKey, student.ClassId);
-            var school = await _schoolService.Get(student.PartitionKey);
-            var classRoom = await _classService.Get(student.ClassId);
+            //var associateMenu = await _settingService.GetMenus("Student");
+            //var courseContent = await _contentService.GetAll(student.PartitionKey, student.ClassId);
+            //var school = await _schoolService.Get(student.PartitionKey);
+            //var classRoom = await _classService.Get(student.ClassId);
 
-            classRoom.Students.Add(studentRes);
-            school.ClassRooms.Add(classRoom);
+            //classRoom.Students.Add(studentRes);
+            //school.ClassRooms.Add(classRoom);
 
             var response = new AuthenticateResponse
             {
@@ -382,9 +382,10 @@
                 FirstName = student.FirstName,
                 LastName = student.LastName,
                 Email = student.EnrolmentNo,
-                SchoolId = school.Id,
+                SchoolId = student.PartitionKey,
                 Role = Role.Student.ToString(),
                 Token = jwtToken,
+                ClassId = student.ClassId,
                 TenantId = student.TenantId
             };
 
