@@ -41,6 +41,11 @@
         public string EnrolmentNo { get; set; }
 
         /// <summary>
+        /// Gets or sets the TenantId.
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
         /// Gets or sets the Gender.
         /// </summary>
         public string Gender { get; set; }
@@ -114,10 +119,5 @@
         /// Gets or sets a value indicating whether TrainStudentModel.
         /// </summary>
         public bool TrainStudentModel { get; set; }
-
-        /// <summary>
-        /// Gets or sets the TenantId.
-        /// </summary>
-        public string TenantId { get; set; }
     }
 }

@@ -10,6 +10,7 @@ namespace goOfflineE.Models
         /// </summary>
         public AuthenticateResponse()
         {
+            Tenant = new Tenant();
         }
 
         /// <summary>
@@ -58,8 +59,18 @@ namespace goOfflineE.Models
         public string SchoolId { get; set; }
 
         /// <summary>
+        /// Gets or sets the ClassId.
+        /// </summary>
+        public string ClassId { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether ForceChangePasswordNextLogin.
         /// </summary>
         public bool ForceChangePasswordNextLogin { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Tenant.
+        /// </summary>
+        public Tenant Tenant { get; set; }
     }
 }

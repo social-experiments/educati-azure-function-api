@@ -44,6 +44,11 @@
         public string EnrolmentNo { get; set; }
 
         /// <summary>
+        /// Gets or sets the TenantId.
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
         /// Gets or sets the ClassId.
         /// </summary>
         [Required]

@@ -103,7 +103,7 @@
         public async Task CreateUpdate(Tenant tenant)
         {
             var tentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
-            var tenantData = tentants.FirstOrDefault(t => t.AccountKey == tenant.AccountKey);
+            var tenantData = tentants.FirstOrDefault(t => t.RowKey == tenant.Id);
 
             if (tenantData is null)
             {
@@ -134,6 +134,15 @@
             {
                 try
                 {
+                    tenantData.AccountKey = tenant.AccountKey;
+                    tenantData.AzureWebJobsStorage = tenant.AzureWebJobsStorage;
+                    tenantData.AzureBlobURL = tenant.AzureBlobURL;
+                    tenantData.Name = tenant.Name;
+                    tenantData.Email = tenant.Email;
+                    tenantData.ApplicationSettings = tenant.ApplicationSettings;
+                    tenantData.CognitiveServiceEndPoint = tenant.CognitiveServiceEndPoint;
+                    tenantData.CognitiveServiceKey = tenant.CognitiveServiceKey;
+
                     await _tableStorage.UpdateAsync("Tenants", tenantData);
                 }
                 catch (Exception ex)
@@ -176,44 +185,14 @@
 
             if (requestData.Role == Role.Student.ToString())
             {
-                var students = await _tableStorage.GetAllAsync<Entites.Student>("Student");
-                var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == requestData.EnrolmentNo.ToLower());
-
-                if (student == null)
-                {
-                    var resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
-                    {
-                        Content = new StringContent(string.Format("Invalid Enrolment Number!"))
-                    };
-                    throw new HttpResponseException(resp);
-                }
-
-                var studentRes = new StudentResponse
-                {
-                    Id = student.RowKey,
-                    FirstName = student.FirstName,
-                    LastName = student.LastName,
-                    EnrolmentNo = student.EnrolmentNo,
-                    Address1 = student.Address1,
-                    Address2 = student.Address2,
-                    Country = student.Country,
-                    State = student.State,
-                    City = student.City,
-                    Zip = student.Zip,
-                    SchoolId = student.PartitionKey,
-                    ClassId = student.ClassId,
-                    ProfileStoragePath = student.ProfileStoragePath,
-                    TrainStudentModel = student.TrainStudentModel,
-                    Gender = student.Gender
-                };
-
                 var associateMenu = await _settingService.GetMenus("Student");
-                var courseContent = await _contentService.GetAll(student.PartitionKey, student.ClassId);
-                var school = await _schoolService.Get(student.PartitionKey);
-                var classRoom = await _classService.Get(student.ClassId);
-
-                classRoom.Students.Add(studentRes);
-                school.ClassRooms.Add(classRoom);
+                var courseContent = await _contentService.GetAll(requestData.SchoolId, requestData.ClassId);
+                var school = await _schoolService.Get(requestData.SchoolId);
+                if(!String.IsNullOrEmpty( requestData?.ClassId))
+                {
+                    var classRoom = await _classService.Get(requestData.ClassId);
+                    school.ClassRooms.Add(classRoom);
+                }
 
                 result.Schools.Add(school);
                 result.CourseContent = courseContent.ToList();

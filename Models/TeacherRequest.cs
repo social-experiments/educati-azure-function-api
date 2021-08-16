@@ -14,6 +14,11 @@
         public string SchoolId { get; set; }
 
         /// <summary>
+        /// Gets or sets the TenantId.
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
         /// Gets or sets the Address1.
         /// </summary>
         [Required]

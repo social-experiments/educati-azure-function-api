@@ -84,5 +84,10 @@
         /// Gets or sets the TenantId.
         /// </summary>
         public string TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the EnrolmentNo.
+        /// </summary>
+        public string EnrolmentNo { get; set; }
     }
 }

@@ -11,6 +11,11 @@
         public string SchoolId { get; set; }
 
         /// <summary>
+        /// Gets or sets the SchoolId.
+        /// </summary>
+        public string ClassId { get; set; }
+
+        /// <summary>
         /// Gets or sets the Role.
         /// </summary>
         public string Role { get; set; }

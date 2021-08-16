@@ -38,11 +38,6 @@
         private readonly ISchoolService _schoolService;
 
         /// <summary>
-        /// Defines the _studentService.
-        /// </summary>
-        private readonly IStudentService _studentService;
-
-        /// <summary>
         /// Defines the _classService.
         /// </summary>
         private readonly IClassService _classService;
@@ -97,7 +92,6 @@
             _tableStorage = tableStorage;
             _schoolService = schoolService;
             _mapper = mapper;
-            _studentService = studentService;
             _classService = classService;
             _contentService = contentService;
             _assessmentService = assessmentService;
@@ -125,26 +119,6 @@
                 throw new HttpResponseException(resp);
             }
 
-            // authentication successful so generate jwt
-            var jwtToken = GenerateToken(account.RowKey, account.TenantId);
-            if(!String.IsNullOrEmpty(account.TenantId))
-            {
-                var dataTentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
-                var tenant = dataTentants.FirstOrDefault(t => t.RowKey == account.TenantId);
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(tenant.AzureWebJobsStorage);
-                _tableStorage.Client = storageAccount.CreateCloudTableClient();
-            }
-
-            string schoolId = "";
-
-            if (account.Role == Role.Teacher.ToString())
-            {
-                TableQuery<Entites.Teacher> query = new TableQuery<Entites.Teacher>()
-                  .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, account.RowKey));
-                var teacherQuery = await _tableStorage.QueryAsync<Entites.Teacher>("Teacher", query);
-                var teacher = teacherQuery.SingleOrDefault();
-                schoolId = teacher.PartitionKey;
-            }
             var response = new AuthenticateResponse
             {
                 Id = account.RowKey,
@@ -153,11 +127,28 @@
                 LastName = account.LastName,
                 Role = account.Role,
                 ForceChangePasswordNextLogin = account.ForceChangePasswordNextLogin,
-                TenantId = account.TenantId,
-                SchoolId = schoolId,
-                Token = jwtToken
+                TenantId = account.TenantId
             };
 
+            // authentication successful so generate jwt
+            response.Token = GenerateToken(account.RowKey, account.TenantId);
+            if(!String.IsNullOrEmpty(account.TenantId))
+            {
+                var dataTentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
+                var tenant = dataTentants.FirstOrDefault(t => t.RowKey == account.TenantId);
+                response.Tenant = _mapper.Map<Models.Tenant>(tenant); ;
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(tenant.AzureWebJobsStorage);
+                _tableStorage.Client = storageAccount.CreateCloudTableClient();
+            }
+
+            if (account.Role == Role.Teacher.ToString())
+            {
+                TableQuery<Entites.Teacher> query = new TableQuery<Entites.Teacher>()
+                  .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, account.RowKey));
+                var teacherQuery = await _tableStorage.QueryAsync<Entites.Teacher>("Teacher", query);
+                var teacher = teacherQuery.SingleOrDefault();
+                response.SchoolId = teacher.PartitionKey;
+            }
             return response;
         }
 
@@ -329,11 +320,11 @@
         /// <returns>The <see cref="Task{AuthenticateResponse}"/>.</returns>
         public async Task<AuthenticateResponse> Authenticate(StudentAuthenticateRequest model)
         {
-            // validate
-            var students = await _tableStorage.GetAllAsync<Student>("Student");
-            var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
+             // validate
+            var users = await _tableStorage.GetAllAsync<User>("User");
+            var user = users.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
 
-            if (student == null)
+            if (user == null)
             {
                 var resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
                 {
@@ -343,34 +334,46 @@
             }
 
             // authentication successful so generate jwt
-            var jwtToken = GenerateToken(student.RowKey, student.TenantId);
+            var jwtToken = GenerateToken(user.RowKey, user.TenantId);
 
-            var studentRes = new StudentResponse
+            if (!String.IsNullOrEmpty(user.TenantId))
             {
-                Id = student.RowKey,
-                FirstName = student.FirstName,
-                LastName = student.LastName,
-                EnrolmentNo = student.EnrolmentNo,
-                Address1 = student.Address1,
-                Address2 = student.Address2,
-                Country = student.Country,
-                State = student.State,
-                City = student.City,
-                Zip = student.Zip,
-                SchoolId = student.PartitionKey,
-                ClassId = student.ClassId,
-                ProfileStoragePath = student.ProfileStoragePath,
-                TrainStudentModel = student.TrainStudentModel,
-                Gender = student.Gender
-            };
+                var dataTentants = await _tableStorage.GetAllAsync<Entites.Tenant>("Tenants");
+                var tenant = dataTentants.FirstOrDefault(t => t.RowKey == user.TenantId);
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(tenant.AzureWebJobsStorage);
+                _tableStorage.Client = storageAccount.CreateCloudTableClient();
+            }
 
-            var associateMenu = await _settingService.GetMenus("Student");
-            var courseContent = await _contentService.GetAll(student.PartitionKey, student.ClassId);
-            var school = await _schoolService.Get(student.PartitionKey);
-            var classRoom = await _classService.Get(student.ClassId);
+            var students = await _tableStorage.GetAllAsync<Student>("Student");
+            var student = students.SingleOrDefault(stud => stud.EnrolmentNo != null && stud.EnrolmentNo.ToLower() == model.EnrolmentNo.ToLower());
 
-            classRoom.Students.Add(studentRes);
-            school.ClassRooms.Add(classRoom);
+
+            //var studentRes = new StudentResponse
+            //{
+            //    Id = student.RowKey,
+            //    FirstName = student.FirstName,
+            //    LastName = student.LastName,
+            //    EnrolmentNo = student.EnrolmentNo,
+            //    Address1 = student.Address1,
+            //    Address2 = student.Address2,
+            //    Country = student.Country,
+            //    State = student.State,
+            //    City = student.City,
+            //    Zip = student.Zip,
+            //    SchoolId = student.PartitionKey,
+            //    ClassId = student.ClassId,
+            //    ProfileStoragePath = student.ProfileStoragePath,
+            //    TrainStudentModel = student.TrainStudentModel,
+            //    Gender = student.Gender
+            //};
+
+            //var associateMenu = await _settingService.GetMenus("Student");
+            //var courseContent = await _contentService.GetAll(student.PartitionKey, student.ClassId);
+            //var school = await _schoolService.Get(student.PartitionKey);
+            //var classRoom = await _classService.Get(student.ClassId);
+
+            //classRoom.Students.Add(studentRes);
+            //school.ClassRooms.Add(classRoom);
 
             var response = new AuthenticateResponse
             {
@@ -379,9 +382,10 @@
                 FirstName = student.FirstName,
                 LastName = student.LastName,
                 Email = student.EnrolmentNo,
-                SchoolId = school.Id,
+                SchoolId = student.PartitionKey,
                 Role = Role.Student.ToString(),
                 Token = jwtToken,
+                ClassId = student.ClassId,
                 TenantId = student.TenantId
             };
 
