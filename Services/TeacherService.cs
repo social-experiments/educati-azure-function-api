@@ -5,6 +5,7 @@
     using goOfflineE.Helpers;
     using goOfflineE.Models;
     using goOfflineE.Repository;
+    using goOfflineE.Services.Contract;
     using Microsoft.WindowsAzure.Storage;
     using Microsoft.WindowsAzure.Storage.Table;
     using System;
@@ -39,18 +40,28 @@
         private readonly IEmailService _emailService;
 
         /// <summary>
+        /// Defines the _commonService.
+        /// </summary>
+        private readonly ICommonService _commonService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TeacherService"/> class.
         /// </summary>
         /// <param name="emailService">The emailService<see cref="IEmailService"/>.</param>
         /// <param name="tableStorage">The tableStorage<see cref="ITableStorage"/>.</param>
         /// <param name="mapper">The mapper<see cref="IMapper"/>.</param>
         /// <param name="profileService">The profileService<see cref="IProfileService"/>.</param>
-        public TeacherService(IEmailService emailService, ITableStorage tableStorage, IMapper mapper, IProfileService profileService)
+        /// <param name="commonService">The commonService<see cref="ICommonService"/>.</param>
+        public TeacherService(IEmailService emailService,
+            ITableStorage tableStorage,
+            IMapper mapper,
+            IProfileService profileService, ICommonService commonService)
         {
             _tableStorage = tableStorage;
             _mapper = mapper;
             _profileService = profileService;
             _emailService = emailService;
+            _commonService = commonService;
         }
 
         /// <summary>
@@ -107,7 +118,7 @@
             {
                 // Register user as teacher
                 var userId = String.IsNullOrEmpty(model.Id) ? Guid.NewGuid().ToString() : model.Id;
-                var defaultPasswrod = "teacher@123"; //SettingConfigurations.GetRandomPassword(10);
+                var defaultPasswrod = "test@123"; //SettingConfigurations.GetRandomPassword(10);
                 RegisterRequest registerRequest = new RegisterRequest
                 {
                     Email = model.Email,
@@ -118,7 +129,8 @@
                     Id = userId,
                     SchoolId = model.SchoolId,
                     Password = defaultPasswrod,
-                    ConfirmPassword = defaultPasswrod
+                    ConfirmPassword = defaultPasswrod,
+                    TenantId = model.TenantId
                 };
 
                 var newTeacher = new Entites.Teacher(model.SchoolId, userId)
@@ -146,8 +158,9 @@
                     {
                         CloudStorageAccount storageAccount = CloudStorageAccount.Parse(SettingConfigurations.AzureWebJobsStorage);
                         _tableStorage.Client = storageAccount.CreateCloudTableClient();
-                        await _profileService.Register(registerRequest);
                     }
+
+                    await _profileService.Register(registerRequest);
                     await NewTeacherNotificationEmail(registerRequest);
                 }
                 catch (Exception ex)
@@ -189,13 +202,23 @@
         /// <returns>The <see cref="Task{IEnumerable{TeacherResponse}}"/>.</returns>
         public async Task<IEnumerable<TeacherResponse>> GetAll(string schoolId)
         {
-            TableQuery<Entites.User> userQuery = new TableQuery<Entites.User>()
-                  .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, schoolId));
-            var users = await _tableStorage.QueryAsync<Entites.User>("User", userQuery);
 
             TableQuery<Entites.Teacher> teacherQuery = new TableQuery<Entites.Teacher>()
                   .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, schoolId));
             var teachers = await _tableStorage.QueryAsync<Entites.Teacher>("Teacher", teacherQuery);
+
+            var tenant = await _commonService.GetTenant();
+
+            if (tenant != null && !String.IsNullOrEmpty(tenant.Id))
+            {
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(SettingConfigurations.AzureWebJobsStorage);
+                _tableStorage.Client = storageAccount.CreateCloudTableClient();
+            }
+
+            TableQuery<Entites.User> userQuery = new TableQuery<Entites.User>()
+             .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, schoolId));
+            var users = await _tableStorage.QueryAsync<Entites.User>("User", userQuery);
+
             var teachersList = from user in users
                                join teacher in teachers
                                     on user.RowKey equals teacher.RowKey
