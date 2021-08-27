@@ -66,5 +66,52 @@ namespace goOfflineE.Functions
             }
             return new OkObjectResult(new { message = "Associate menu update successfully." });
         }
+
+        /// <summary>
+        /// The ApplicationSetting.
+        /// </summary>
+        /// <param name="request">The request<see cref="HttpRequest"/>.</param>
+        /// <returns>The <see cref="Task{IActionResult}"/>.</returns>
+        [FunctionName("ApplicationSetting")]
+        public async Task<IActionResult> ApplicationSetting(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post",  Route = "setting/application")]
+            [RequestBodyType(typeof(ApplicationSetting), "Application settings")] HttpRequest request)
+        {
+            var validateStatus = base.AuthorizationStatus(request);
+            if (validateStatus != HttpStatusCode.Accepted)
+            {
+                return new BadRequestObjectResult(validateStatus);
+            }
+
+            string requestBody = await new StreamReader(request.Body).ReadToEndAsync();
+            ApplicationSetting requestData = JsonConvert.DeserializeObject<ApplicationSetting>(requestBody);
+
+            try
+            {
+                await _settingService.SaveApplicationSetting(requestData);
+            }
+            catch (HttpResponseException ex)
+            {
+
+                return new BadRequestObjectResult(ex);
+
+            }
+            return new OkObjectResult(new { message = "Application setting update successfully." });
+        }
+
+        [FunctionName("ApplicationSettingGet")]
+        public async Task<IActionResult> GetApplicationSetting(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "setting/application")] HttpRequest request)
+        {
+            var validateStatus = base.AuthorizationStatus(request);
+            if (validateStatus != System.Net.HttpStatusCode.Accepted)
+            {
+                return new BadRequestObjectResult(validateStatus);
+            }
+
+            var response = await _settingService.GetApplicationSetting();
+
+            return new OkObjectResult(response);
+        }
     }
 }

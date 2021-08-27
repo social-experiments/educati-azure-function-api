@@ -12,10 +12,11 @@
         /// </summary>
         public DataResponse()
         {
-            this.Schools = new List<School>();
-            this.CourseContent = new List<Content>();
-            this.AssessmentCategory = new List<string>();
-            this.AssociateMenu = new List<string>();
+            Schools = new List<School>();
+            CourseContent = new List<Content>();
+            AssessmentCategory = new List<string>();
+            AssociateMenu = new List<string>();
+            ApplicationSetting = new List<ApplicationSetting>();
         }
 
         /// <summary>
@@ -37,5 +38,10 @@
         /// Gets or sets the CourseContent.
         /// </summary>
         public List<Content> CourseContent { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ApplicationSetting.
+        /// </summary>
+        public List<ApplicationSetting> ApplicationSetting { get; set; }
     }
 }

@@ -182,6 +182,8 @@
         public async Task<DataResponse> GetDataResponse(DataRequest requestData)
         {
             var result = new DataResponse();
+            var applicationSettings = await _settingService.GetApplicationSetting();
+            result.ApplicationSetting = applicationSettings.ToList();
 
             if (requestData.Role == Role.Student.ToString())
             {
