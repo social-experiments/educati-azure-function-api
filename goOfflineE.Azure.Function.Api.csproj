@@ -49,6 +49,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
-    <Folder Include="Services\Contract\" />
   </ItemGroup>
 </Project>

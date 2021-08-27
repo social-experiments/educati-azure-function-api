@@ -10,6 +10,7 @@ namespace goOfflineE
     using goOfflineE.Helpers;
     using goOfflineE.Repository;
     using goOfflineE.Services;
+    using goOfflineE.Services.Contract;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Azure.CognitiveServices.Vision.Face;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -66,6 +67,7 @@ namespace goOfflineE
             services.AddTransient<IPushNotificationService, PushNotificationService>();
             services.AddTransient<ISettingService, SettingService>();
             services.AddTransient<ITenantService, TenantService>();
+            services.AddTransient<ICommonService, CommonService>();
 
             services.AddScoped<ITableStorage, AzureTableStorage>();
             services.AddSingleton<IFaceClient, FaceClient>(s => new FaceClient(new ApiKeyServiceClientCredentials(SettingConfigurations.CognitiveServiceKey),

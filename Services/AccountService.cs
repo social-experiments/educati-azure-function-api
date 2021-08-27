@@ -159,6 +159,8 @@
         /// <returns>The <see cref="Task{bool}"/>.</returns>
         public async Task<bool> VerifyEmail(string email)
         {
+            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(SettingConfigurations.AzureWebJobsStorage);
+            _tableStorage.Client = storageAccount.CreateCloudTableClient();
             // validate
             TableQuery<User> query = new TableQuery<User>()
                    .Where(TableQuery.GenerateFilterCondition("Email", QueryComparisons.Equal, email));
@@ -191,6 +193,8 @@
         public async Task ResetPassword(ResetPasswordRequest model)
         {
             // validate
+            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(SettingConfigurations.AzureWebJobsStorage);
+            _tableStorage.Client = storageAccount.CreateCloudTableClient();
             TableQuery<User> query = new TableQuery<User>()
                    .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, model.UserId));
             var users = await _tableStorage.QueryAsync<User>("User", query);
